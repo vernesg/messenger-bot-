@@ -1,5 +1,4 @@
 const express = require("express");
-const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const login = require("ws3-fca");
@@ -12,8 +11,6 @@ const commandDir = path.join(__dirname, "commands");
 app.use(express.static("public"));
 app.use(express.json());
 
-const upload = multer({ dest: "uploads/" });
-
 fs.readdirSync(commandDir).forEach(file => {
   if (file.endsWith(".js")) {
     const command = require(path.join(commandDir, file));
@@ -23,10 +20,10 @@ fs.readdirSync(commandDir).forEach(file => {
 
 function startBot(appState) {
   login({ appState }, (err, api) => {
-    if (err) return console.error("Login error:", err);
+    if (err) return console.error("❌ Login error:", err);
 
     api.setOptions({ listenEvents: true, selfListen: true });
-    console.log("🤖 Bot is live");
+    console.log("🤖 Bot is running...");
 
     api.listenMqtt((err, event) => {
       if (err) return console.error(err);
@@ -45,16 +42,12 @@ function startBot(appState) {
   });
 }
 
-app.post("/upload", upload.single("appstate"), (req, res) => {
-  const content = fs.readFileSync(req.file.path, "utf8");
-  try {
-    const appState = JSON.parse(content);
-    fs.writeFileSync("appstate.json", JSON.stringify(appState, null, 2));
-    startBot(appState);
-    res.send("✅ Login successful. Bot started.");
-  } catch (err) {
-    res.status(400).send("❌ Invalid appstate file.");
-  }
+app.post("/upload-json", (req, res) => {
+  const appState = req.body.appState;
+  if (!Array.isArray(appState)) return res.status(400).send("❌ Invalid AppState format");
+  fs.writeFileSync("appstate.json", JSON.stringify(appState, null, 2));
+  startBot(appState);
+  res.send("✅ Bot started with pasted AppState.");
 });
 
 app.get("/commands", (req, res) => {
@@ -65,4 +58,4 @@ app.get("/commands", (req, res) => {
   res.json(cmds);
 });
 
-app.listen(PORT, () => console.log(`🌍 UI on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🌐 Web UI running on http://localhost:${PORT}`));
