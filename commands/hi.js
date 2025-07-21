@@ -1,7 +1,7 @@
 module.exports = {
   name: "hi",
-  description: "Greets the user",
+  description: "Say hello",
   execute(api, event) {
-    api.sendMessage("👋 Hello! How can I help you today?", event.threadID);
+    api.sendMessage("👋 Hello! How can I help you?", event.threadID);
   }
 };
