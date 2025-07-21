@@ -1,26 +1,37 @@
 const login = require("ws3-fca");
+const fs = require("fs");
+const path = require("path");
 
 const appState = require("./appstate.json");
+const commandDir = path.join(__dirname, "commands");
+
+// Load all command modules
+const commands = new Map();
+fs.readdirSync(commandDir).forEach(file => {
+  if (file.endsWith(".js")) {
+    const command = require(path.join(commandDir, file));
+    commands.set(command.name, command);
+  }
+});
 
 login({ appState }, (err, api) => {
   if (err) return console.error("Login failed:", err);
 
   api.setOptions({ listenEvents: true, selfListen: false });
-
   console.log("🤖 Bot is running...");
 
-  const listen = api.listenMqtt((err, event) => {
+  api.listenMqtt((err, event) => {
     if (err) return console.error(err);
+    if (event.type !== "message" || !event.body) return;
 
-    if (event.type === "message" && event.body) {
-      const message = event.body.toLowerCase();
+    const args = event.body.trim().split(/\s+/);
+    const cmd = args.shift().toLowerCase();
 
-      if (message === "hi" || message === "hello") {
-        api.sendMessage("👋 Hello! I'm your bot.", event.threadID);
-      } else if (message === "help") {
-        api.sendMessage("📖 Available commands:\n- hi\n- help", event.threadID);
-      } else {
-        api.sendMessage(`You said: ${event.body}`, event.threadID);
+    if (commands.has(cmd)) {
+      try {
+        commands.get(cmd).execute(api, event, args);
+      } catch (e) {
+        console.error("Error executing command:", e);
       }
     }
   });
