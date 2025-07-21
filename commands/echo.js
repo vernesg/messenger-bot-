@@ -1,8 +1,8 @@
 module.exports = {
   name: "echo",
-  description: "Repeats what you say",
+  description: "Echo your message",
   execute(api, event, args) {
-    if (!args.length) return api.sendMessage("❗ Usage: echo <text>", event.threadID);
+    if (!args.length) return api.sendMessage("Usage: echo <message>", event.threadID);
     api.sendMessage(args.join(" "), event.threadID);
   }
 };
