@@ -5,20 +5,35 @@
   <title>Messenger Bot Login</title>
   <style>
     body { background: #000; color: #0f0; font-family: monospace; padding: 20px; }
-    input, button { margin: 10px 0; }
+    textarea { width: 100%; height: 200px; background: #111; color: #0f0; border: 1px solid #0f0; }
+    button { margin-top: 10px; padding: 10px; background: #0f0; color: #000; font-weight: bold; border: none; }
     .command { margin: 5px 0; }
   </style>
 </head>
 <body>
-  <h2>🤖 Upload AppState to Start Bot</h2>
-  <form id="uploadForm" enctype="multipart/form-data">
-    <input type="file" name="appstate" required />
-    <button type="submit">Login & Start Bot</button>
-  </form>
+  <h2>🤖 Paste AppState JSON</h2>
+  <textarea id="appstateInput" placeholder="Paste your AppState array here..."></textarea><br />
+  <button onclick="submitAppState()">Login & Start Bot</button>
+
   <h3>📜 Available Commands</h3>
   <div id="commands"></div>
 
   <script>
+    async function submitAppState() {
+      const raw = document.getElementById("appstateInput").value;
+      try {
+        const json = JSON.parse(raw);
+        const res = await fetch("/upload-json", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ appState: json })
+        });
+        alert(await res.text());
+      } catch {
+        alert("❌ Invalid JSON format");
+      }
+    }
+
     fetch("/commands")
       .then(res => res.json())
       .then(cmds => {
@@ -30,13 +45,6 @@
           div.appendChild(el);
         });
       });
-
-    document.getElementById("uploadForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const form = new FormData(e.target);
-      const res = await fetch("/upload", { method: "POST", body: form });
-      alert(await res.text());
-    });
   </script>
 </body>
 </html>
