@@ -1,0 +1,11 @@
+{
+  "name": "fb-messenger-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "ws3-fca": "^1.0.0"
+  }
+}
