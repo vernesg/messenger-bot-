@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Messenger Bot Login</title>
+  <style>
+    body { background: #000; color: #0f0; font-family: monospace; padding: 20px; }
+    input, button { margin: 10px 0; }
+    .command { margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <h2>🤖 Upload AppState to Start Bot</h2>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" name="appstate" required />
+    <button type="submit">Login & Start Bot</button>
+  </form>
+  <h3>📜 Available Commands</h3>
+  <div id="commands"></div>
+
+  <script>
+    fetch("/commands")
+      .then(res => res.json())
+      .then(cmds => {
+        const div = document.getElementById("commands");
+        cmds.forEach(cmd => {
+          const el = document.createElement("div");
+          el.className = "command";
+          el.textContent = `• ${cmd.name} - ${cmd.description}`;
+          div.appendChild(el);
+        });
+      });
+
+    document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const res = await fetch("/upload", { method: "POST", body: form });
+      alert(await res.text());
+    });
+  </script>
+</body>
+</html>
