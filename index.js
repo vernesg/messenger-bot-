@@ -1,11 +1,19 @@
+const express = require("express");
 const login = require("ws3-fca");
 const fs = require("fs");
 const path = require("path");
 
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Keep Render Web Service alive
+app.get("/", (_, res) => res.send("Messenger bot is running..."));
+app.listen(PORT, () => console.log("🌐 Web server running on port", PORT));
+
+// Bot logic
 const appState = require("./appstate.json");
 const commandDir = path.join(__dirname, "commands");
 
-// Load all command modules
 const commands = new Map();
 fs.readdirSync(commandDir).forEach(file => {
   if (file.endsWith(".js")) {
@@ -15,23 +23,23 @@ fs.readdirSync(commandDir).forEach(file => {
 });
 
 login({ appState }, (err, api) => {
-  if (err) return console.error("Login failed:", err);
+  if (err) return console.error("❌ Login failed:", err);
 
   api.setOptions({ listenEvents: true, selfListen: false });
-  console.log("🤖 Bot is running...");
+  console.log("🤖 Messenger bot is online...");
 
   api.listenMqtt((err, event) => {
     if (err) return console.error(err);
     if (event.type !== "message" || !event.body) return;
 
     const args = event.body.trim().split(/\s+/);
-    const cmd = args.shift().toLowerCase();
+    const commandName = args.shift().toLowerCase();
 
-    if (commands.has(cmd)) {
+    if (commands.has(commandName)) {
       try {
-        commands.get(cmd).execute(api, event, args);
+        commands.get(commandName).execute(api, event, args);
       } catch (e) {
-        console.error("Error executing command:", e);
+        console.error("⚠️ Error in command:", e);
       }
     }
   });
